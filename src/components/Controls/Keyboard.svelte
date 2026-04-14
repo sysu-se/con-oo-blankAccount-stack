@@ -3,9 +3,9 @@
 	import { cursor } from '@sudoku/stores/cursor';
 	import { notes } from '@sudoku/stores/notes';
 	import { candidates } from '@sudoku/stores/candidates';
-
-	// TODO: Improve keyboardDisabled
 	import { keyboardDisabled } from '@sudoku/stores/keyboard';
+
+	import { gameManager } from '@sudoku/stores/gameManager';
 
 	function handleKeyButton(num) {
 		if (!$keyboardDisabled) {
@@ -15,13 +15,13 @@
 				} else {
 					candidates.add($cursor, num);
 				}
-				userGrid.set($cursor, 0);
+				gameManager.guess({ row: $cursor.y, col: $cursor.x, value: 0 });
 			} else {
 				if ($candidates.hasOwnProperty($cursor.x + ',' + $cursor.y)) {
 					candidates.clear($cursor);
 				}
-
-				userGrid.set($cursor, num);
+				// 输入接入领域层
+				gameManager.guess({ row: $cursor.y, col: $cursor.x, value: num });
 			}
 		}
 	}
@@ -34,35 +34,30 @@
 			case 87:
 				cursor.move(0, -1);
 				break;
-
 			case 'ArrowDown':
 			case 40:
 			case 's':
 			case 83:
 				cursor.move(0, 1);
 				break;
-
 			case 'ArrowLeft':
 			case 37:
 			case 'a':
 			case 65:
 				cursor.move(-1);
 				break;
-
 			case 'ArrowRight':
 			case 39:
 			case 'd':
 			case 68:
 				cursor.move(1);
 				break;
-
 			case 'Backspace':
 			case 8:
 			case 'Delete':
 			case 46:
 				handleKeyButton(0);
 				break;
-
 			default:
 				if (e.key && e.key * 1 >= 0 && e.key * 1 < 10) {
 					handleKeyButton(e.key * 1);
@@ -74,10 +69,9 @@
 	}
 </script>
 
-<svelte:window on:keydown={handleKey} /><!--on:beforeunload|preventDefault={e => e.returnValue = ''} />-->
+<svelte:window on:keydown={handleKey} />
 
 <div class="keyboard-grid">
-
 	{#each Array(10) as _, keyNum}
 		{#if keyNum === 9}
 			<button class="btn btn-key" disabled={$keyboardDisabled} title="Erase Field" on:click={() => handleKeyButton(0)}>
@@ -91,15 +85,12 @@
 			</button>
 		{/if}
 	{/each}
-
 </div>
 
 <style>
 	.keyboard-grid {
 		@apply grid grid-rows-2 grid-cols-5 gap-3;
 	}
-
-
 	.btn-key {
 		@apply py-4 px-0;
 	}
