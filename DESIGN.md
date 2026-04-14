@@ -12,7 +12,7 @@
 
 ## B. 响应式机制说明
 1. **依赖的机制：**
-   使用了 `writable` 和 `derived`。由 `$store` 语法糖在 Svelte 组件中自动进行订阅管理。
+   使用了 `writable` 和 `derived`。由 `$store` 在 Svelte 组件中自动进行订阅管理。
 2. **暴露与隐藏的边界：**
    响应式暴露给 UI 的只有棋盘当前状态和操作许可权（用于按钮 disable 控制）。而用于支持撤销的 `history` 和 `redoStack` 等内部机制被封装在 `createGame` 的闭包域中，禁止 UI 直接触碰。
 3. **直接 Mutate 内部对象的问题：**
@@ -20,7 +20,7 @@
 
 ## C. 改进说明
 1. **相比 HW1 改进了什么？**
-   修复了 `review.docx` 中指出的缺陷：
+   修复了HW1中指出的缺陷：
    - 封死了 `Game.getSudoku()` 直接泄露实体引用的边界。
    - 对构造 Game 时的初始入参和数组执行了强制克隆。
    - 移除了 `this.canUndo()` 的写法，改用局部函数。
