@@ -5,14 +5,15 @@ function cloneGrid(grid) {
 
 // 1. 创建 Sudoku 实体
 export function createSudoku(input) {
-  let grid = cloneGrid(input); // 防御性拷贝
+  // 防御性拷贝，防止外部引用篡改
+  let grid = cloneGrid(input); 
 
   return {
     getGrid() { 
-      return cloneGrid(grid); // 每次返回深拷贝，确保领域绝对封装
+      return cloneGrid(grid); 
     }, 
     guess({ row, col, value }) {
-      // 增加基本的数独领域规则校验
+      // 引入领域规则：校验坐标与数值边界
       if (row >= 0 && row < 9 && col >= 0 && col < 9 && value >= 0 && value <= 9) {
         grid[row][col] = value;
       }
@@ -29,25 +30,27 @@ export function createSudoku(input) {
   };
 }
 
+// 2. 从 JSON 反序列化恢复 Sudoku
 export function createSudokuFromJSON(json) {
-  if (!json || !json.grid) throw new Error("Invalid JSON structure");
+  // 增加基本结构校验
+  if (!json || !json.grid) throw new Error("Invalid JSON structure for Sudoku");
   return createSudoku(json.grid);
 }
 
-// 2. 创建 Game 控制对象
+// 3. 创建 Game 控制对象
 export function createGame({ sudoku, history = [], redoStack = [] }) {
-  // 防御性拷贝初始传入的对象和数组，防止外部保留引用篡改内部状态
+  // 彻底拷贝初始入参，封装内部历史栈
   let currentSudoku = sudoku.clone();
   let _history = history.map(s => s.clone());
   let _redoStack = redoStack.map(s => s.clone());
 
-  // 使用内部闭包函数，消除 undo/redo 对动态 this 的依赖
+  // 使用闭包函数替代 this.canUndo，保障回调执行时的上下文安全
   const canUndo = () => _history.length > 0;
   const canRedo = () => _redoStack.length > 0;
 
   return {
     getSudoku() { 
-      // 暴露只读代理，防止外部绕过 Game 直接调用 sudoku.guess()
+      // 暴露只读代理接口，防止外部获取实体后直接调用 guess 绕过历史栈记录
       return {
         getGrid: () => currentSudoku.getGrid(),
         toJSON: () => currentSudoku.toJSON(),
@@ -55,8 +58,8 @@ export function createGame({ sudoku, history = [], redoStack = [] }) {
       };
     },
     guess(move) {
-      _history.push(currentSudoku.clone()); // 存入历史快照
-      _redoStack = []; // 发生新分支，清空重做栈
+      _history.push(currentSudoku.clone()); 
+      _redoStack = []; 
       currentSudoku.guess(move);
     },
     undo() {
@@ -83,6 +86,7 @@ export function createGame({ sudoku, history = [], redoStack = [] }) {
   };
 }
 
+// 4. 从 JSON 反序列化恢复 Game
 export function createGameFromJSON(json) {
   return createGame({
     sudoku: createSudokuFromJSON(json.sudoku),
